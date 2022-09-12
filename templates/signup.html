@@ -12,7 +12,10 @@
   </head>
   <body  class="banner" style="background-image: url('static/ignite_b3_family-compressed.jpg')">
     <div class="container">
-      <form action="/setcookie" class="form" method="post">
+      {% if error %}  
+      <p class="error"><strong>Error</strong>: {{error}}</p>  
+  {% endif %}  
+      <form action="/register" class="form" method="post">
         <h2>Be A Member</h2>
         <div class="form-elements">
           <label for="username">Username</label>
@@ -28,6 +31,7 @@
         <div class="form-elements">
           <label for="password">Password</label>
           <input
+          onchange='checkPasswordLength(this.value)'
             type="password"
             id="password"
             name="password"
@@ -36,8 +40,11 @@
             required
           />
         </div>
+
+        <span id="errorSpan" style="color:red;"></span>
+
         <div class="form-elements">
-          <label for="password">Confirm password</label>
+          <label for="password" style="margin-top: 13px;">Confirm password</label>
           <input
             type="password"
             id="checkPassword"
@@ -50,7 +57,7 @@
         
         <p id="alertPassword"></p>
 
-        <button id="signupbtn" type="submit">Signup</button>
+        <button id="signupbtn" type="submit" >Signup</button>
       </form>
     </div>
 
