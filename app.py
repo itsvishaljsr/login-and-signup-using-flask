@@ -4,47 +4,60 @@ from flask_bcrypt import Bcrypt
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
+userData = {}
+
 @app.route('/')
 def index():
   return render_template('index.html')
 
-@app.route('/login')
-def login():
-  return render_template('login.html')
 
 @app.route('/home')
 def home():
-  return render_template('home.html')
-
-@app.route('/sign_up')
-def test():
-  return render_template('signup.html') 
+  return render_template('home.html',message=request.cookies.get('Token').title())
 
 
-@app.route('/setcookie',methods = ['POST'])  
-def setcookie():
+
+@app.route('/register',methods = ['POST', 'GET'])  
+def register():
   if request.method == 'POST':
-    username = request.form['username']  
-    password = bcrypt.generate_password_hash(request.form['password']) 
-
-    resp = make_response(render_template('login.html'))  
-    resp.set_cookie('email',username) 
-    resp.set_cookie('password',password)
-
-    return resp 
+      username = request.form['username'].lower()  
+      password = bcrypt.generate_password_hash(request.form['password']) 
+      error=''
+      if username in userData.keys():
+        error='username already exit\n try new username'
+        return render_template('signup.html',error=error)
+      else:
+        userData[username] = password 
+        return redirect('/login')
+  elif request.method == 'GET':
+    return render_template('signup.html')
          
 
-@app.route('/getcookie',methods = ['POST'])  
-def getcookie():  
-    if request.method == "POST":  
-        fusername = request.form['username']  
-        fpassword = request.form['password']  
+@app.route('/login',methods = ['POST','GET'])  
+def login():  
+  if request.method == "POST":  
+    username = request.form['username'].lower()  
+    password = request.form['password']
+    if request.cookies.get('Token') == username:    
+      # return  render_template('home.html',message=request.cookies.get('Token'))
+        return redirect('/home')
+    else:
+      # print(f"{username} {password} {userData}")
 
-    if fusername in request.cookies.get('email') and bcrypt.check_password_hash(request.cookies.get('password'), fpassword):    
-      return  render_template('home.html',message=fusername)
-    else:  
-      error="wrong Credential :("
-      return render_template('login.html', error=error)       
+      if username in userData.keys():
+        print('working')
+        if bcrypt.check_password_hash(userData[username], password) :
+          print('working fine')
+          resp = make_response(redirect('/home'))
+          resp.set_cookie('Token',username)
+          print('working smoothly')
+          return resp
+        else:
+          return render_template('login.html',error="Wrong password")
+      else:
+        return render_template('login.html', error="Username doesn't exist")
+  elif request.method == "GET":
+    return render_template('login.html')
 
 if __name__ == '__main__':
   app.run(debug=True)
